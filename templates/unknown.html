@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unknown Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            padding-bottom: 80px; /* Space for the fixed footer */
+            box-sizing: border-box; /* Ensures padding is included in element width/height */
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        .image-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px; /* Adds margin at the bottom to avoid overlap */
+        }
+        .image-grid img {
+            width: 200px;  /* Uniform size for all images */
+            height: 200px;
+            object-fit: cover;  /* Ensures images maintain aspect ratio while filling the box */
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        footer {
+            background-color: #222; /* Darker color for better contrast */
+            color: white;
+            padding: 20px; /* Increased padding */
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2); /* Shadow for better separation */
+            border-top: 1px solid #444; /* Border on top to separate from content */
+        }
+        .delete-button {
+            background-color: red; /* Styling for delete button */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-button:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Unknown Images</h1>
+    </header>
+
+    <div class="image-grid">
+        {% for image in unknown %}
+            <div>
+                <img src="{{ url_for('serve_unknown_image', filename=image) }}" alt="{{ image }}">
+                <form action="{{ url_for('delete_unknown_image', filename=image) }}" method="post" style="display: inline;">
+                    <button type="submit" class="delete-button">Delete</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+    <footer>
+        <p>&copy; 2024 Raksha Alert. All rights reserved.</p>
+    </footer>
+</body>
+</html>

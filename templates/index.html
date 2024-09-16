@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh; /* Adjust this if needed */
+            margin: 20px;
+        }
+        .video-frame {
+            flex: 1;
+            text-align: center;
+        }
+        .video-frame img {
+            max-width: 100%;
+            height: auto;
+        }
+        .sidebar {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 250px; /* Adjust width as needed */
+            height: 80%; /* Adjust height as needed */
+            background-color: #f4f4f4;
+            border-right: 1px solid #ddd;
+            overflow-y: auto; /* Add scrolling if content overflows */
+        }
+        .sidebar-left {
+            left: 0;
+        }
+        .sidebar-content {
+            padding: 10px;
+            height: 100%;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="text"], .form-group input[type="file"], .form-group input[type="email"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Raksha Alert</h1>
+    </header>
+
+    <div class="container">
+        <div class="sidebar sidebar-left">
+            <div class="sidebar-content">
+                <form action="{{ url_for('add_member') }}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <button type="submit">Add Member</button>
+                    </div>
+                </form>
+                <a href="{{ url_for('unknown') }}" class="button-link">View Unknown Images</a>
+            </div>
+        </div>
+
+        <div class="video-frame">
+            <img src="{{ url_for('video_feed') }}" alt="Video Stream">
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Raksha Alert. All rights reserved.</p>
+    </footer>
+</body>
+</html>
