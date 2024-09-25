@@ -1,78 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unknown Images</title>
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <style>
+        /* Basic global styling */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
-            padding-bottom: 80px; /* Space for the fixed footer */
-            box-sizing: border-box; /* Ensures padding is included in element width/height */
+            background-color: #f1f5f9;
+            padding-bottom: 100px;
+            /* Space for the fixed footer */
+            box-sizing: border-box;
         }
+
+        /* Styling for header */
         header {
-            background-color: #333;
+            background: linear-gradient(90deg, #0077b6, #00b4d8);
             color: white;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 0 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 1.5px;
+        }
+
+        .back-link {
+            position: absolute;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 2.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        .back-link:hover {
+            color: #ffc300;
+        }
+
+        /* Styling for flash messages */
+        .flash-message {
+            color: #e63946;
+            background: #ffc3c3;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        
+        .flash-message.error {
+            background-color: #e63946;
+            color: white;
+            max-width: 300px;
+            margin: 20px auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 10px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+
+        /* Styling for the image grid */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 2px auto;
+        }
+
+        /* Image styling */
+        .image-grid img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .image-grid img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Delete button styling */
+        .delete-button {
+            background-color: #e63946;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: block;
+            margin: 10px 0;
             text-align: center;
         }
-        .image-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px; /* Adds margin at the bottom to avoid overlap */
+
+        .delete-button:hover {
+            background-color: #d62839;
         }
-        .image-grid img {
-            width: 200px;  /* Uniform size for all images */
-            height: 200px;
-            object-fit: cover;  /* Ensures images maintain aspect ratio while filling the box */
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
+
+        /* Footer styling */
         footer {
-            background-color: #222; /* Darker color for better contrast */
+            background-color: #0077b6;
+            /* background-color: #333; */
             color: white;
-            padding: 20px; /* Increased padding */
+            padding: 10px;
             text-align: center;
             position: fixed;
             width: 100%;
             bottom: 0;
-            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2); /* Shadow for better separation */
-            border-top: 1px solid #444; /* Border on top to separate from content */
         }
-        .delete-button {
-            background-color: red; /* Styling for delete button */
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .delete-button:hover {
-            background-color: darkred;
+
+        footer p {
+            margin: 0;
+            font-size: 1rem;
         }
     </style>
 </head>
+
 <body>
+
     <header>
         <h1>Unknown Images</h1>
+        <a href="{{ url_for('index') }}" class="back-link"><i class='bx bx-left-arrow-circle' style='color:#fffcfc' ></i></a>
     </header>
 
+    <!-- Flash messages for success and error notifications -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-message {{ category }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
     <div class="image-grid">
+        <!-- Loop to display unknown images -->
         {% for image in unknown %}
-            <div>
-                <img src="{{ url_for('serve_unknown_image', filename=image) }}" alt="{{ image }}">
-                <form action="{{ url_for('delete_unknown_image', filename=image) }}" method="post" style="display: inline;">
-                    <button type="submit" class="delete-button">Delete</button>
-                </form>
-            </div>
+        <div>
+            <img src="{{ url_for('serve_unknown_image', filename=image) }}" alt="{{ image }}">
+            <form action="{{ url_for('delete_unknown_image', filename=image) }}" method="post"
+                style="text-align: center;">
+                <button type="submit" class="delete-button">Delete</button>
+            </form>
+        </div>
         {% endfor %}
     </div>
+
     <footer>
         <p>&copy; 2024 Raksha Alert. All rights reserved.</p>
     </footer>
+
 </body>
+
 </html>

@@ -1,100 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Known Members</title>
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <style>
+        /* Basic global styling */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #f1f5f9;
         }
+
+        /* Styling for header */
         header {
-            background-color: #333;
+            background: linear-gradient(90deg, #0077b6, #00b4d8);
             color: white;
-            padding: 10px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* position: fixed; */
+            padding: 0 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            letter-spacing: 1px;
             text-align: center;
         }
+
+        .back-link {
+            position: absolute;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 2.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        .back-link:hover {
+            color: #ffc300;
+        }
+
+        /* Container for form and gallery */
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 20px auto;
             padding: 20px;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
+
         form {
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
         }
+
         label {
             margin: 10px 0 5px;
             font-weight: bold;
+            font-size: 0.9rem;
         }
+
+        input[type="text"] {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
         input[type="file"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            width: 100%;
+            max-width: 300px;
             margin-bottom: 15px;
         }
+
         button {
-            padding: 10px;
-            background-color: #333;
+            padding: 8px 15px;
+            background-color: #0077b6;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
         }
+
         button:hover {
-            background-color: #555;
+            background-color: #005f73;
         }
+
+        /* Gallery styling */
         .gallery {
             margin-top: 20px;
         }
-        .gallery img {
-            max-width: 150px;
-            margin: 5px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
+
+        .gallery h2 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            color: #0077b6;
         }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .gallery-item {
+            text-align: center;
+        }
+
+        .gallery img {
+            width: 100%;
+            max-width: 150px;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-item span {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
         .delete-btn {
-            background-color: red;
+            background-color: #e63946;
             color: white;
             border: none;
             border-radius: 5px;
             padding: 5px 10px;
             cursor: pointer;
+            font-size: 0.8rem;
+            transition: background-color 0.3s ease;
             margin-top: 5px;
         }
+
+        .delete-btn:hover {
+            background-color: #d62839;
+        }
+
         .flash-message {
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 20px;
+            font-size: 0.9rem;
         }
+
         .flash-message.success {
             background-color: #d4edda;
             color: #155724;
         }
+
         .flash-message.error {
             background-color: #f8d7da;
             color: #721c24;
         }
+
+        /* Footer styling */
+        footer {
+            background-color: #0077b6;
+            /* background-color: #333; */
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
+
 <body>
     <header>
+        <a href="{{ url_for('index') }}" class="back-link"><i class='bx bx-left-arrow-circle' style='color:#fffcfc' ></i></a>
         <h1>Add Known Members</h1>
     </header>
-    
+
     <div class="container">
         <!-- Flash messages for success and error notifications -->
         {% with messages = get_flashed_messages(with_categories=True) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
         <!-- Form to add a new member -->
@@ -111,17 +238,23 @@
         <!-- Gallery of known members with options to delete -->
         <div class="gallery">
             <h2>Known Members</h2>
-            <div id="known_members">
+            <div class="gallery-grid">
                 {% for image in known_images %}
-                    <div>
-                        <img src="{{ url_for('static', filename='known/' ~ image) }}" alt="{{ image }}">
-                        <form action="{{ url_for('delete_member', filename=image) }}" method="post" style="display:inline;">
-                            <button type="submit" class="delete-btn">Delete</button>
-                        </form>
-                    </div>
+                <div class="gallery-item">
+                    <img src="{{ url_for('serve_known_image', filename=image) }}" alt="{{ image }}">
+                    <span>{{ image }}</span>
+                    <form action="{{ url_for('delete_member', filename=image) }}" method="post" style="display:inline;">
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </div>
                 {% endfor %}
             </div>
         </div>
     </div>
+
+    <footer>
+        <p>&copy; 2024 Raksha Alert. All rights reserved.</p>
+    </footer>
 </body>
+
 </html>

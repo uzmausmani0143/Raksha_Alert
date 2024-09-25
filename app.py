@@ -16,10 +16,21 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+import speech_recognition as sr
+import boto3
 
 # Initialize Flask
 app = Flask(__name__)
 app.secret_key = 'your_generated_secret_key'  # Update this with a generated key
+
+sns_client= boto3.client('sns', region_name='us-east-1')
+
+#ARNs
+arn_police = 'arn:aws:sns:us-east-1:107335645910:sumanbot'
+arn_neighbors = 'arn:aws:sns:us-east-1:107335645910:Padosi'
+
+#Intialiaze recognizer
+recognizer=sr.Recognizer()
 
 # Initialize pygame mixer for sound control
 pygame.mixer.init()
@@ -30,10 +41,10 @@ known_face_names = []
 captured_unknown_face_encodings = []
 
 # Directory containing images of known persons
-known_faces_dir = r"C:\Users\Acer\Downloads\All_Work\object files\known"
+known_faces_dir = r"C:\Users\Acer\Downloads\All_Work\Raksha_Alert\known"
 
 # Directory to save images of unknown persons
-unknown_faces_dir = r"C:\Users\Acer\Downloads\All_Work\object files\unknown"
+unknown_faces_dir = r"C:\Users\Acer\Downloads\All_Work\Raksha_Alert\unknown"
 
 # Email configuration
 smtp_server = "smtp.gmail.com"
@@ -53,12 +64,34 @@ for image_name in os.listdir(known_faces_dir):
         known_face_encodings.append(face_encoding)
         known_face_names.append(os.path.splitext(image_name)[0])
 
-# Fetch geolocation
-g = geocoder.ip('me')
-if g.city == "Bhubaneswar" and not g.latlng == [28.7041, 77.1025]:
-    location_info = "Location: Bhubaneswar, Odisha, India - Lat: 20.2961, Lng: 85.8245"
-else:
-    location_info = f"Location: {g.city}, {g.state}, {g.country} - Lat: {g.latlng[0]}, Lng: {g.latlng[1]}"
+# # Global variable to store geolocation information
+location_info = None
+
+# def fetch_geolocation():
+#     global location_info
+#     # Fetch geolocation
+#     g = geocoder.ip('me')
+#     location_info = f"Location: {g.city}, {g.state}, {g.country} - Lat: {g.latlng[0]}, Lng: {g.latlng[1]}"
+
+# # Call the function to fetch geolocation info once
+# fetch_geolocation()
+
+
+def fetch_geolocation():
+    global location_info
+    try:
+        g = geocoder.ip('me')
+        if g.ok and g.latlng:
+            city = g.city if g.city else "Unknown City"
+            state = g.state if g.state else "Unknown State"
+            country = g.country if g.country else "Unknown Country"
+            location_info = f"Location: {city}, {state}, {country} - Lat: {g.latlng[0]}, Lng: {g.latlng[1]}"
+        else:
+            location_info = "Geolocation data not available"
+    except Exception as e:
+        location_info = f"Error fetching geolocation: {str(e)}"
+
+fetch_geolocation()
 
 # Load YOLO object detection model
 model_config = "yolov4.cfg"
@@ -214,7 +247,11 @@ def generate_frames():
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             cv2.putText(frame, face['dominant_emotion'], (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (54, 219, 9), 2)
 
-        cv2.putText(frame, location_info, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1)
+
+        (text_width, text_height), baseline = cv2.getTextSize(location_info, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        # Draw a rectangle behind the text
+        cv2.rectangle(frame, (10, frame.shape[0] - 10 - text_height - baseline), (10 + text_width, frame.shape[0] - 10 + baseline), (100,100,102), cv2.FILLED) #grey 
+        cv2.putText(frame, location_info, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255,0), 2) #green
 
         _, buffer = cv2.imencode('.jpg', frame)
         frame = buffer.tobytes()
@@ -225,6 +262,46 @@ def generate_frames():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+def send_sns_alert(arn, message):
+    try:
+        sns_client.publish(
+            TopicArn=arn,
+            Message=message,
+            Subject='Emergency Alert'
+        )
+        print(f"Alert sent to ARN: {arn}")
+    except Exception as e:
+        print(f"Error sending SNS alert: {e}")
+
+def listen_for_commands():
+    with sr.Microphone() as source:
+        print("Listening for voice commands...")
+        while True:
+            try:
+                # Adjust for ambient noise and listen
+                recognizer.adjust_for_ambient_noise(source)
+                audio = recognizer.listen(source)
+
+                # Recognize speech
+                command = recognizer.recognize_google(audio).lower()
+
+                # Check for specific keywords to trigger SNS alerts
+                if 'laptop' in command:
+                    send_sns_alert(arn_police, 'Alert: Assistance required from the police.')
+                elif 'picnic' in command or 'neighbor' in command:
+                    send_sns_alert(arn_neighbors, 'Alert: Assistance required from neighbors.')
+                else:
+                    print(f"Unrecognized command: {command}")
+
+            except sr.UnknownValueError:
+                print("Could not understand the audio.")
+            except sr.RequestError as e:
+                print(f"Error with the speech recognition service: {e}")
+
+@app.route('/known/<filename>')
+def serve_known_image(filename):
+    return send_from_directory(known_faces_dir, filename)
 
 @app.route('/add_member', methods=['POST'])
 def add_member():
@@ -258,6 +335,7 @@ def add_member():
 
     return redirect(url_for('member'))
 
+# Delete Member
 @app.route('/delete_member/<filename>', methods=['POST'])
 def delete_member(filename):
     try:
@@ -288,6 +366,7 @@ def unknown():
     # List all files in the unknown folder
     unknown_images_list = [f for f in os.listdir(unknown_faces_dir) if f.lower().endswith(('png', 'jpg', 'jpeg'))]
     return render_template('unknown.html', unknown=unknown_images_list)
+
 @app.route('/delete_unknown_image/<filename>', methods=['POST'])
 def delete_unknown_image(filename):
     try:
